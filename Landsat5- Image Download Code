@@ -1,0 +1,25 @@
+// Use the drawn polygon as ROI
+var roi = geometry;  // 'geometry' is automatically created when you draw it
+
+// Filter the Landsat 5 dataset for a specific region and time range
+var landsat5 = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')
+  .filterBounds(roi)  // Filter by the drawn polygon
+  .filterDate('2015-01-01', '2023-12-31')  // Define the date range
+  .sort('system:time_start')  // Sort by date (if necessary)
+  .first();  // Select the first image in the collection
+
+// Select the specific bands (SR_B1, SR_B2, SR_B3, SR_B4, SR_B5, SR_B7) for Landsat 5
+var selectedBands = landsat5.select(['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7']);
+
+// Display the selected bands on the map (for visualization purposes)
+Map.centerObject(roi, 8);
+Map.addLayer(selectedBands, {min: 0, max: 3000}, 'Selected Landsat 5 Bands');
+
+// Define the export task to download the image with the selected bands
+Export.image.toDrive({
+  image: selectedBands,
+  description: 'landsat5_selected_bands_image',
+  scale: 30,  // 30m resolution for Landsat 5
+  region: roi,
+  fileFormat: 'GeoTIFF'
+});
